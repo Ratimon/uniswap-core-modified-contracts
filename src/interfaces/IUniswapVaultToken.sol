@@ -23,9 +23,7 @@ interface IUniswapVaultToken is IERC20, IERC20Metadata {
 
     function asset1() external view returns (address assetTokenAddress);
 
-    function totalAssets0() external view returns (uint256 totalManagedAssets);
-
-    function totalAssets1() external view returns (uint256 totalManagedAssets);
+    function totalAssets() external view returns (uint256 totalManagedAssets);
 
     function convertToShares(uint256 assets) external view returns (uint256 shares);
 
