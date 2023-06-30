@@ -51,7 +51,7 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
         factory = msg.sender;
     }
 
-    function initialize(IERC20 token0_, IERC20 token1_) internal initializer() {
+    function initialize(IERC20 token0_, IERC20 token1_) external initializer() {
         (bool success0, uint8 asset0Decimals) = _tryGetAssetDecimals(token0_);
         uint8 underlyingDecimals0 = success0 ? asset0Decimals : 18;
         _token0 = token0_;

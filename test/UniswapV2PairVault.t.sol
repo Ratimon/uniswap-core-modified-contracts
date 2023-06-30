@@ -3,6 +3,8 @@ pragma solidity =0.8.19;
 
 import {Test} from "@forge-std/Test.sol";
 
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import {MockERC20} from "@solmate/test/utils/mocks/MockERC20.sol";
 import {UniswapV2PairVault} from "@main/UniswapV2PairVault.sol";
 
@@ -29,10 +31,10 @@ contract UniswapV2PairVaultTest is Test {
         pair = new UniswapV2PairVault();
 
         token0 = IERC20(address(new MockERC20("Token0", "T0", 18)));
-        vm.label(address(acceptedToken), "Token0");
+        vm.label(address(token0), "Token0");
 
         token1 = IERC20(address(new MockERC20("Token1", "T1", 18)));
-        vm.label(address(saleToken), "Token1");
+        vm.label(address(token1), "Token1");
 
         pair.initialize(token0, token1);
 
@@ -40,6 +42,7 @@ contract UniswapV2PairVaultTest is Test {
     }
 
     function test_1() external {
+        vm.startPrank(deployer);
 
     }
 
