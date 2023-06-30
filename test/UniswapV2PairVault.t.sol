@@ -39,11 +39,11 @@ contract UniswapV2PairVaultTest is Test {
     modifier deployerInit() {
         vm.startPrank(deployer);
 
-        deal({token: address(token0), to: deployer, give: 20 ether});
-        deal({token: address(token1), to: deployer, give: 30 ether});
+        deal({token: address(token0), to: deployer, give: 200 ether});
+        deal({token: address(token1), to: deployer, give: 300 ether});
 
-        assertEq(token0.balanceOf(deployer), 20 ether, "Unexpected Faucet for token0");
-        assertEq(token1.balanceOf(deployer), 30 ether, "Unexpected Faucet for token0");
+        assertEq(token0.balanceOf(deployer), 200 ether, "Unexpected Faucet for token0");
+        assertEq(token1.balanceOf(deployer), 300 ether, "Unexpected Faucet for token0");
 
         pair.initialize(token0, token1);
 
@@ -59,13 +59,37 @@ contract UniswapV2PairVaultTest is Test {
 
         pair.deposit(10 ether, 10 ether, deployer);
 
-        assertEq(pair.balanceOf(deployer), 10 ether, "initial share should be sqrt( token0 * token1 )");
-
+        
         (uint128 reserve0, uint128 reserve1) = pair.totalAssets();
         assertEq(reserve0, 10 ether, "unexpected reserve0");
         assertEq(reserve1, 10 ether, "unexpected reserve1");
 
-        assertEq(pair.totalSupply(), 10 ether);
+        assertEq(pair.balanceOf(deployer), 10 ether, "initial share should be sqrt( token0 * token1 )");
+        assertEq(pair.totalSupply(), 10 ether, "unexpected total supply");
+
+        vm.stopPrank();
+    }
+
+    function test_double_deposit() external deployerInit {
+        vm.startPrank(deployer);
+
+        token0.approve(address(pair), type(uint256).max);
+        token1.approve(address(pair), type(uint256).max);
+
+        pair.deposit(10 ether, 10 ether, deployer);
+
+        vm.warp(37);
+
+        pair.deposit(20 ether, 20 ether, deployer);
+
+
+        (uint128 reserve0, uint128 reserve1) = pair.totalAssets();
+        assertEq(reserve0, 30 ether, "unexpected reserve0");
+        assertEq(reserve1, 30 ether, "unexpected reserve1");
+
+        uint decimalsOffset = 5;
+        assertApproxEqAbs(pair.balanceOf(deployer), 30 ether, 10*(10**decimalsOffset), "should approximately equal original + added");
+        assertApproxEqAbs(pair.totalSupply(), 30 ether, 10*(10**decimalsOffset), "unexpected total supply");
 
         vm.stopPrank();
     }

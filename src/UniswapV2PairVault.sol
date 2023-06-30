@@ -110,7 +110,7 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable {
     }
 
     function _decimalsOffset() internal view virtual returns (uint8) {
-        return 3;
+        return 4;
     }
 
     function convertToShares(uint256 assets0, uint256 assets1) public view virtual override returns (uint256) {
