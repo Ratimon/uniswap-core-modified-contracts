@@ -35,15 +35,25 @@ contract UniswapV2PairVaultTest is Test {
         vm.label(address(token0), "Token0");
         vm.label(address(token1), "Token1");
 
+        vm.stopPrank();
+    }
+
+    modifier deployerInit() {
+        vm.startPrank(deployer);
+
         deal({token: address(token0), to: deployer, give: 20 ether });
         deal({token: address(token1), to: deployer, give: 30 ether});
+
+        assertEq(token0.balanceOf( deployer),20 ether, "Unexpected Faucet for token0" );
+        assertEq(token1.balanceOf( deployer),30 ether, "Unexpected Faucet for token0" );
 
         pair.initialize(token0, token1);
 
         vm.stopPrank();
+        _;
     }
 
-    function test_deposit() external {
+    function test_deposit() external deployerInit {
         vm.startPrank(deployer);
 
         token0.approve(address(pair), type(uint256).max);
