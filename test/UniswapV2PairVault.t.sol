@@ -57,7 +57,7 @@ contract UniswapV2PairVaultTest is Test {
         token0.approve(address(pair), type(uint256).max);
         token1.approve(address(pair), type(uint256).max);
 
-        pair.deposit(10 ether, 10 ether, deployer);
+        pair.deposit(10 ether, 10 ether, deployer); // + 10 LP
 
         (uint128 reserve0, uint128 reserve1) = pair.totalAssets();
         assertEq(reserve0, 10 ether, "unexpected reserve0");
@@ -76,11 +76,11 @@ contract UniswapV2PairVaultTest is Test {
         vm.stopPrank();
     }
 
-    function test_double_deposit() external deployerInit deployerAddsFirstLiquiditySuccess {
+    function test_double_deposits() external deployerInit deployerAddsFirstLiquiditySuccess {
         vm.startPrank(deployer);
 
         vm.warp(37);
-        pair.deposit(20 ether, 20 ether, deployer);
+        pair.deposit(20 ether, 20 ether, deployer); // + 20 LP
 
         (uint128 reserve0, uint128 reserve1) = pair.totalAssets();
         assertEq(reserve0, 30 ether, "unexpected reserve0");
@@ -89,6 +89,22 @@ contract UniswapV2PairVaultTest is Test {
         uint decimalsOffset = 5;
         assertApproxEqAbs(pair.balanceOf(deployer), 30 ether, 10*(10**decimalsOffset), "should approximately equal original + added");
         assertApproxEqAbs(pair.totalSupply(), 30 ether, 10*(10**decimalsOffset), "unexpected total supply");
+
+        vm.stopPrank();
+    }
+
+    function test_unbalanced_deposits() external deployerInit deployerAddsFirstLiquiditySuccess {
+        vm.startPrank(deployer);
+
+        vm.warp(37);
+        pair.deposit(20 ether, 40 ether, deployer); // + 20 LP
+
+        (uint128 reserve0, uint128 reserve1) = pair.totalAssets();
+        assertEq(reserve0, 30 ether, "unexpected reserve0");
+        assertEq(reserve1, 50 ether, "unexpected reserve1");
+
+        uint decimalsOffset = 5;
+        assertApproxEqAbs(pair.balanceOf(deployer), 30 ether, 10*(10**decimalsOffset), "should approximately equal original + added");
 
         vm.stopPrank();
     }
