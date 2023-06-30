@@ -17,7 +17,7 @@ import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.s
 import {UD60x18, intoUint128,intoUint256, ud, unwrap} from "@prb-math/UD60x18.sol";
 
 
-contract UniswapVaultToken is IUniswapVaultToken, ERC20, Initializable  {
+contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
     using Math for uint256;
     using SafeMath for uint256;
 
