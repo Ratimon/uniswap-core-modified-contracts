@@ -13,6 +13,7 @@ contract UniswapV2PairVaultTest is Test {
     uint256 deployerPrivateKey = vm.deriveKey(mnemonic, "m/44'/60'/0'/0/", 1); //  address = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
 
     address deployer = vm.addr(deployerPrivateKey);
+    address alice = makeAddr("Alice");
 
     UniswapV2PairVault pair;
 
@@ -86,9 +87,14 @@ contract UniswapV2PairVaultTest is Test {
         assertEq(reserve0, 30 ether, "unexpected reserve0");
         assertEq(reserve1, 30 ether, "unexpected reserve1");
 
-        uint decimalsOffset = 5;
-        assertApproxEqAbs(pair.balanceOf(deployer), 30 ether, 10*(10**decimalsOffset), "should approximately equal original + added");
-        assertApproxEqAbs(pair.totalSupply(), 30 ether, 10*(10**decimalsOffset), "unexpected total supply");
+        uint256 decimalsOffset = 5;
+        assertApproxEqAbs(
+            pair.balanceOf(deployer),
+            30 ether,
+            10 * (10 ** decimalsOffset),
+            "should approximately equal original + added"
+        );
+        assertApproxEqAbs(pair.totalSupply(), 30 ether, 10 * (10 ** decimalsOffset), "unexpected total supply");
 
         vm.stopPrank();
     }
@@ -103,8 +109,13 @@ contract UniswapV2PairVaultTest is Test {
         assertEq(reserve0, 30 ether, "unexpected reserve0");
         assertEq(reserve1, 50 ether, "unexpected reserve1");
 
-        uint decimalsOffset = 5;
-        assertApproxEqAbs(pair.balanceOf(deployer), 30 ether, 10*(10**decimalsOffset), "should approximately equal original + added");
+        uint256 decimalsOffset = 5;
+        assertApproxEqAbs(
+            pair.balanceOf(deployer),
+            30 ether,
+            10 * (10 ** decimalsOffset),
+            "should approximately equal original + added"
+        );
 
         vm.stopPrank();
     }
@@ -113,7 +124,7 @@ contract UniswapV2PairVaultTest is Test {
         vm.startPrank(deployer);
 
         vm.warp(37);
-        
+
         uint256 token0BalanceBeforeRedeem = token0.balanceOf(deployer);
         uint256 token1BalanceBeforeRedeem = token1.balanceOf(deployer);
 
@@ -124,17 +135,32 @@ contract UniswapV2PairVaultTest is Test {
         uint256 token0BalanceAfterRedeem = token0.balanceOf(deployer);
         uint256 token1BalanceAfterRedeem = token1.balanceOf(deployer);
 
-        uint decimalsOffset = 5;
+        uint256 decimalsOffset = 5;
 
         (uint128 reserve0, uint128 reserve1) = pair.totalAssets();
-        assertApproxEqAbs(reserve0, 0 ether, 10*(10**decimalsOffset) , "unexpected reserve0");
-        assertApproxEqAbs(reserve1, 0 ether, 10*(10**decimalsOffset), "unexpected reserve1");
+        assertApproxEqAbs(reserve0, 0 ether, 10 * (10 ** decimalsOffset), "unexpected reserve0");
+        assertApproxEqAbs(reserve1, 0 ether, 10 * (10 ** decimalsOffset), "unexpected reserve1");
 
-        assertApproxEqAbs(pair.balanceOf(deployer), 0 ether, 10*(10**decimalsOffset), "initial share should be sqrt( token0 * token1 )");
-        assertApproxEqAbs(pair.totalSupply(), 0 ether, 10*(10**decimalsOffset), "unexpected total supply");
+        assertApproxEqAbs(
+            pair.balanceOf(deployer),
+            0 ether,
+            10 * (10 ** decimalsOffset),
+            "initial share should be sqrt( token0 * token1 )"
+        );
+        assertApproxEqAbs(pair.totalSupply(), 0 ether, 10 * (10 ** decimalsOffset), "unexpected total supply");
 
-        assertApproxEqAbs(token0BalanceAfterRedeem, token0BalanceBeforeRedeem + 10 ether, 10*(10**decimalsOffset), "unexpected token0 balance of deployer" );
-        assertApproxEqAbs(token1BalanceAfterRedeem, token1BalanceBeforeRedeem + 10 ether, 10*(10**decimalsOffset), "unexpected token1 balance of deployer" );
+        assertApproxEqAbs(
+            token0BalanceAfterRedeem,
+            token0BalanceBeforeRedeem + 10 ether,
+            10 * (10 ** decimalsOffset),
+            "unexpected token0 balance of deployer"
+        );
+        assertApproxEqAbs(
+            token1BalanceAfterRedeem,
+            token1BalanceBeforeRedeem + 10 ether,
+            10 * (10 ** decimalsOffset),
+            "unexpected token1 balance of deployer"
+        );
 
         vm.stopPrank();
     }
