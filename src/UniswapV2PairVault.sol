@@ -183,11 +183,7 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable {
         uint256 amount0 = balance0.sub(_reserve0);
         uint256 amount1 = balance1.sub(_reserve1);
 
-        if (totalSupply() == 0) {
-            shares = Math.sqrt(amount0 * amount1);
-        } else {
-            shares = previewDeposit(amount0, amount1);
-        }
+        shares = previewDeposit(amount0, amount1);
 
         _mint(receiver, shares);
         _update(balance0, balance1, _reserve0, _reserve1);
@@ -251,8 +247,6 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable {
         _update(balance0, balance1, _reserve0, _reserve1);
 
         emit Withdraw(msg.sender, receiver, owner, assets0, assets1, shares);
-
-        // return (assets0, assets1);
     }
 
     function _convertToShares(uint256 assets0, uint256 assets1, Math.Rounding rounding)
@@ -261,12 +255,15 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable {
         virtual
         returns (uint256)
     {
-        (uint128 _reserve0, uint128 _reserve1) = totalAssets();
+        if (totalSupply() == 0) {
+            return Math.sqrt(assets0 * assets1);
+        } else {
+            (uint128 _reserve0, uint128 _reserve1) = totalAssets();
 
-        uint256 liquidity0 = assets0.mulDiv(totalSupply() + 10 ** _decimalsOffset(), _reserve0 + 1, rounding);
-        uint256 liquidity1 = assets1.mulDiv(totalSupply() + 10 ** _decimalsOffset(), _reserve1 + 1, rounding);
-
-        return Math.min(liquidity0, liquidity1);
+            uint256 liquidity0 = assets0.mulDiv(totalSupply() + 10 ** _decimalsOffset(), _reserve0 + 1, rounding);
+            uint256 liquidity1 = assets1.mulDiv(totalSupply() + 10 ** _decimalsOffset(), _reserve1 + 1, rounding);
+            return Math.min(liquidity0, liquidity1);
+        }
     }
 
     function _convertToAssets(uint256 shares, Math.Rounding rounding)

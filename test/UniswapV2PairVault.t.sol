@@ -51,7 +51,7 @@ contract UniswapV2PairVaultTest is Test {
         _;
     }
 
-    modifier deployerAddsFirstLiquidirt() {
+    modifier deployerAddsFirstLiquiditySuccess() {
         vm.startPrank(deployer);
 
         token0.approve(address(pair), type(uint256).max);
@@ -70,13 +70,13 @@ contract UniswapV2PairVaultTest is Test {
         _;
     }
 
-    function test_deposit() external deployerInit deployerAddsFirstLiquidirt {
+    function test_deposit() external deployerInit deployerAddsFirstLiquiditySuccess {
         vm.startPrank(deployer);
 
         vm.stopPrank();
     }
 
-    function test_double_deposit() external deployerInit deployerAddsFirstLiquidirt {
+    function test_double_deposit() external deployerInit deployerAddsFirstLiquiditySuccess {
         vm.startPrank(deployer);
 
         vm.warp(37);
