@@ -108,4 +108,34 @@ contract UniswapV2PairVaultTest is Test {
 
         vm.stopPrank();
     }
+
+    function test_redeem() external deployerInit deployerAddsFirstLiquiditySuccess {
+        vm.startPrank(deployer);
+
+        vm.warp(37);
+        
+        uint256 token0BalanceBeforeRedeem = token0.balanceOf(deployer);
+        uint256 token1BalanceBeforeRedeem = token1.balanceOf(deployer);
+
+        pair.approve(address(pair), type(uint256).max);
+        uint256 shares = pair.balanceOf(deployer); // 10 ether
+        pair.redeem(shares, deployer, deployer);
+
+        uint256 token0BalanceAfterRedeem = token0.balanceOf(deployer);
+        uint256 token1BalanceAfterRedeem = token1.balanceOf(deployer);
+
+        uint decimalsOffset = 5;
+
+        (uint128 reserve0, uint128 reserve1) = pair.totalAssets();
+        assertApproxEqAbs(reserve0, 0 ether, 10*(10**decimalsOffset) , "unexpected reserve0");
+        assertApproxEqAbs(reserve1, 0 ether, 10*(10**decimalsOffset), "unexpected reserve1");
+
+        assertApproxEqAbs(pair.balanceOf(deployer), 0 ether, 10*(10**decimalsOffset), "initial share should be sqrt( token0 * token1 )");
+        assertApproxEqAbs(pair.totalSupply(), 0 ether, 10*(10**decimalsOffset), "unexpected total supply");
+
+        assertApproxEqAbs(token0BalanceAfterRedeem, token0BalanceBeforeRedeem + 10 ether, 10*(10**decimalsOffset), "unexpected token0 balance of deployer" );
+        assertApproxEqAbs(token1BalanceAfterRedeem, token1BalanceBeforeRedeem + 10 ether, 10*(10**decimalsOffset), "unexpected token1 balance of deployer" );
+
+        vm.stopPrank();
+    }
 }
