@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.19;
 
-import {IUniswapVaultToken} from './interfaces/IUniswapVaultToken.sol';
-
+import {IUniswapVaultToken} from "./interfaces/IUniswapVaultToken.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -14,19 +13,18 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-import {UD60x18, intoUint128,intoUint256, ud, unwrap} from "@prb-math/UD60x18.sol";
+import {UD60x18, intoUint128, intoUint256, ud, unwrap} from "@prb-math/UD60x18.sol";
 
-
-contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
+contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable {
     using Math for uint256;
     using SafeMath for uint256;
 
     event Swap(
         address indexed sender,
-        uint amount0In,
-        uint amount1In,
-        uint amount0Out,
-        uint amount1Out,
+        uint256 amount0In,
+        uint256 amount1In,
+        uint256 amount0Out,
+        uint256 amount1Out,
         address indexed to
     );
     event Sync(uint128 reserve0, uint128 reserve1);
@@ -38,20 +36,20 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
 
     address public factory;
 
-    uint128 private reserve0;           // uses single storage slot, accessible via getReserves
-    uint128 private reserve1;           // uses single storage slot, accessible via getReserves
+    uint128 private reserve0; // uses single storage slot, accessible via getReserves
+    uint128 private reserve1; // uses single storage slot, accessible via getReserves
 
-    uint32  private blockTimestampLast; 
+    uint32 private blockTimestampLast;
 
     uint256 public price0CumulativeLast;
     uint256 public price1CumulativeLast;
     uint256 public kLast; // reserve0 * reserve1, as of immediately after the most recent liquidity event
 
-    constructor() ERC20('Uniswap V2', 'UNI-V2') {
+    constructor() ERC20("Uniswap V2", "UNI-V2") {
         factory = msg.sender;
     }
 
-    function initialize(IERC20 token0_, IERC20 token1_) external initializer() {
+    function initialize(IERC20 token0_, IERC20 token1_) external initializer {
         (bool success0, uint8 asset0Decimals) = _tryGetAssetDecimals(token0_);
         uint8 underlyingDecimals0 = success0 ? asset0Decimals : 18;
         _token0 = token0_;
@@ -62,20 +60,17 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
 
         require(underlyingDecimals0 == underlyingDecimals1, "decimals must equal");
         _underlyingDecimals = underlyingDecimals0;
-
     }
 
     // update reserves and, on the first call per block, price accumulators
-    function _update(uint balance0, uint balance1, uint128 _reserve0, uint128 _reserve1) private {
+    function _update(uint256 balance0, uint256 balance1, uint128 _reserve0, uint128 _reserve1) private {
         // require(balance0 <= uint112(-1) && balance1 <= uint112(-1), 'UniswapV2: OVERFLOW');
-        uint32 blockTimestamp = uint32(block.timestamp % 2**32);
+        uint32 blockTimestamp = uint32(block.timestamp % 2 ** 32);
         uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
 
-
         if (timeElapsed > 0 && _reserve0 != 0 && _reserve1 != 0) {
-            price0CumulativeLast  += intoUint256(UD60x18.wrap(_reserve1).div(ud(_reserve0)).mul(ud(timeElapsed)));
-            price1CumulativeLast  += intoUint256(UD60x18.wrap(_reserve0).div(ud(_reserve1)).mul(ud(timeElapsed)));
-
+            price0CumulativeLast += intoUint256(UD60x18.wrap(_reserve1).div(ud(_reserve0)).mul(ud(timeElapsed)));
+            price1CumulativeLast += intoUint256(UD60x18.wrap(_reserve0).div(ud(_reserve1)).mul(ud(timeElapsed)));
         }
         reserve0 = uint128(balance0);
         reserve1 = uint128(balance1);
@@ -83,14 +78,12 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
         emit Sync(reserve0, reserve1);
     }
 
-
     /**
      * @dev Attempts to fetch the asset decimals. A return value of false indicates that the attempt failed in some way.
      */
-     function _tryGetAssetDecimals(IERC20 asset_) private view returns (bool, uint8) {
-        (bool success, bytes memory encodedDecimals) = address(asset_).staticcall(
-            abi.encodeWithSelector(IERC20Metadata.decimals.selector)
-        );
+    function _tryGetAssetDecimals(IERC20 asset_) private view returns (bool, uint8) {
+        (bool success, bytes memory encodedDecimals) =
+            address(asset_).staticcall(abi.encodeWithSelector(IERC20Metadata.decimals.selector));
         if (success && encodedDecimals.length >= 32) {
             uint256 returnedDecimals = abi.decode(encodedDecimals, (uint256));
             if (returnedDecimals <= type(uint8).max) {
@@ -100,8 +93,7 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
         return (false, 0);
     }
 
-
-     function decimals() public view virtual override(IERC20Metadata, ERC20) returns (uint8) {
+    function decimals() public view virtual override(IERC20Metadata, ERC20) returns (uint8) {
         return _underlyingDecimals + _decimalsOffset();
     }
 
@@ -113,10 +105,9 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
         return address(_token1);
     }
 
-    function totalAssets() public view virtual returns (uint128 totalManagedAssets0, uint128 totalManagedAssets1 ) {
+    function totalAssets() public view virtual returns (uint128 totalManagedAssets0, uint128 totalManagedAssets1) {
         return (reserve0, reserve1);
     }
-    
 
     function _decimalsOffset() internal view virtual returns (uint8) {
         return 3;
@@ -147,7 +138,7 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
     }
 
     function previewDeposit(uint256 assets0, uint256 assets1) public view virtual override returns (uint256) {
-        return _convertToShares(assets0,assets1, Math.Rounding.Down);
+        return _convertToShares(assets0, assets1, Math.Rounding.Down);
     }
 
     // function previewMint(uint256 shares) public view virtual override returns (uint256, uint256) {
@@ -171,16 +162,20 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
     //     return shares;
     // }
 
-    function deposit(uint256 assets0, uint256 assets1, address receiver) public virtual override returns (uint256 shares) {
-
+    function deposit(uint256 assets0, uint256 assets1, address receiver)
+        public
+        virtual
+        override
+        returns (uint256 shares)
+    {
         (uint256 maxAssets0, uint256 maxAssets1) = maxDeposit(receiver);
-        require ( (assets0 <= maxAssets0) && (assets1 <= maxAssets1) , "ERC4626: deposit more than max"  );
+        require((assets0 <= maxAssets0) && (assets1 <= maxAssets1), "ERC4626: deposit more than max");
 
         // Need to transfer before minting to avoid reenter.
         SafeERC20.safeTransferFrom(_token0, msg.sender, address(this), assets0);
         SafeERC20.safeTransferFrom(_token1, msg.sender, address(this), assets1);
 
-        (uint128 _reserve0, uint128 _reserve1 )= totalAssets();
+        (uint128 _reserve0, uint128 _reserve1) = totalAssets();
 
         uint256 balance0 = _token0.balanceOf(address(this));
         uint256 balance1 = _token1.balanceOf(address(this));
@@ -188,11 +183,10 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
         uint256 amount0 = balance0.sub(_reserve0);
         uint256 amount1 = balance1.sub(_reserve1);
 
-
         if (totalSupply() == 0) {
             shares = Math.sqrt(amount0 * amount1);
         } else {
-            shares  = previewDeposit(amount0, amount1) ;
+            shares = previewDeposit(amount0, amount1);
         }
 
         _mint(receiver, shares);
@@ -200,7 +194,6 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
 
         emit Deposit(msg.sender, receiver, assets0, assets1, shares);
     }
-
 
     // function mint(uint256 shares, address receiver) public virtual override returns (uint256) {
     //     require(shares <= maxMint(receiver), "ERC4626: mint more than max");
@@ -233,16 +226,21 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
     //     return assets;
     // }
 
-    function redeem(uint256 shares, address receiver, address owner) public virtual override returns (uint256 assets0, uint256 assets1) {
+    function redeem(uint256 shares, address receiver, address owner)
+        public
+        virtual
+        override
+        returns (uint256 assets0, uint256 assets1)
+    {
         require(shares <= maxRedeem(owner), "ERC4626: redeem more than max");
 
-        ( assets0,  assets1) = previewRedeem(shares);
-        require(assets0 > 0 && assets1 > 0, 'UniswapV2: INSUFFICIENT_LIQUIDITY_BURNED');
-    
+        (assets0, assets1) = previewRedeem(shares);
+        require(assets0 > 0 && assets1 > 0, "UniswapV2: INSUFFICIENT_LIQUIDITY_BURNED");
+
         _burn(address(this), shares);
         SafeERC20.safeTransferFrom(IERC20(address(this)), msg.sender, address(this), shares);
 
-        (uint128 _reserve0, uint128 _reserve1 )= totalAssets();
+        (uint128 _reserve0, uint128 _reserve1) = totalAssets();
 
         // Need to transfer before returning asser to avoid reenter.
         SafeERC20.safeTransfer(_token0, receiver, assets0);
@@ -252,16 +250,18 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
         uint256 balance1 = _token1.balanceOf(address(this));
         _update(balance0, balance1, _reserve0, _reserve1);
 
-
         emit Withdraw(msg.sender, receiver, owner, assets0, assets1, shares);
-    
-        // return (assets0, assets1);
 
+        // return (assets0, assets1);
     }
 
-    function _convertToShares(uint256 assets0, uint256 assets1, Math.Rounding rounding) internal view virtual returns (uint256) {
-
-        (uint128 _reserve0, uint128 _reserve1 )= totalAssets();
+    function _convertToShares(uint256 assets0, uint256 assets1, Math.Rounding rounding)
+        internal
+        view
+        virtual
+        returns (uint256)
+    {
+        (uint128 _reserve0, uint128 _reserve1) = totalAssets();
 
         uint256 liquidity0 = assets0.mulDiv(totalSupply() + 10 ** _decimalsOffset(), _reserve0 + 1, rounding);
         uint256 liquidity1 = assets1.mulDiv(totalSupply() + 10 ** _decimalsOffset(), _reserve1 + 1, rounding);
@@ -269,8 +269,12 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
         return Math.min(liquidity0, liquidity1);
     }
 
-    function _convertToAssets(uint256 shares, Math.Rounding rounding) internal view virtual returns (uint256, uint256) {
-
+    function _convertToAssets(uint256 shares, Math.Rounding rounding)
+        internal
+        view
+        virtual
+        returns (uint256, uint256)
+    {
         // (uint256 balance0, uint256 balance1 )= totalAssets();
         uint256 balance0 = _token0.balanceOf(address(this));
         uint256 balance1 = _token1.balanceOf(address(this));
@@ -320,6 +324,4 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
     //     uint256 assets,
     //     uint256 shares
     // ) internal virtual;
-    
 }
-

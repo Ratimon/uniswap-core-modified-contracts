@@ -8,9 +8,7 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {MockERC20} from "@solmate/test/utils/mocks/MockERC20.sol";
 import {UniswapV2PairVault} from "@main/UniswapV2PairVault.sol";
 
-
 contract UniswapV2PairVaultTest is Test {
-
     string mnemonic = "test test test test test test test test test test test junk";
     uint256 deployerPrivateKey = vm.deriveKey(mnemonic, "m/44'/60'/0'/0/", 1); //  address = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
 
@@ -41,11 +39,11 @@ contract UniswapV2PairVaultTest is Test {
     modifier deployerInit() {
         vm.startPrank(deployer);
 
-        deal({token: address(token0), to: deployer, give: 20 ether });
+        deal({token: address(token0), to: deployer, give: 20 ether});
         deal({token: address(token1), to: deployer, give: 30 ether});
 
-        assertEq(token0.balanceOf( deployer),20 ether, "Unexpected Faucet for token0" );
-        assertEq(token1.balanceOf( deployer),30 ether, "Unexpected Faucet for token0" );
+        assertEq(token0.balanceOf(deployer), 20 ether, "Unexpected Faucet for token0");
+        assertEq(token1.balanceOf(deployer), 30 ether, "Unexpected Faucet for token0");
 
         pair.initialize(token0, token1);
 
@@ -59,7 +57,7 @@ contract UniswapV2PairVaultTest is Test {
         token0.approve(address(pair), type(uint256).max);
         token1.approve(address(pair), type(uint256).max);
 
-        pair.deposit( 10 ether, 10 ether, deployer);
+        pair.deposit(10 ether, 10 ether, deployer);
 
         assertEq(pair.balanceOf(deployer), 10 ether, "initial share should be sqrt( token0 * token1 )");
 
@@ -70,7 +68,5 @@ contract UniswapV2PairVaultTest is Test {
         assertEq(pair.totalSupply(), 10 ether);
 
         vm.stopPrank();
-
     }
-
 }
