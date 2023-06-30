@@ -51,7 +51,7 @@ contract UniswapV2PairVaultTest is Test {
         _;
     }
 
-    function test_deposit() external deployerInit {
+    modifier deployerAddsFirstLiquidirt() {
         vm.startPrank(deployer);
 
         token0.approve(address(pair), type(uint256).max);
@@ -59,7 +59,6 @@ contract UniswapV2PairVaultTest is Test {
 
         pair.deposit(10 ether, 10 ether, deployer);
 
-        
         (uint128 reserve0, uint128 reserve1) = pair.totalAssets();
         assertEq(reserve0, 10 ether, "unexpected reserve0");
         assertEq(reserve1, 10 ether, "unexpected reserve1");
@@ -68,20 +67,20 @@ contract UniswapV2PairVaultTest is Test {
         assertEq(pair.totalSupply(), 10 ether, "unexpected total supply");
 
         vm.stopPrank();
+        _;
     }
 
-    function test_double_deposit() external deployerInit {
+    function test_deposit() external deployerInit deployerAddsFirstLiquidirt {
         vm.startPrank(deployer);
 
-        token0.approve(address(pair), type(uint256).max);
-        token1.approve(address(pair), type(uint256).max);
+        vm.stopPrank();
+    }
 
-        pair.deposit(10 ether, 10 ether, deployer);
+    function test_double_deposit() external deployerInit deployerAddsFirstLiquidirt {
+        vm.startPrank(deployer);
 
         vm.warp(37);
-
         pair.deposit(20 ether, 20 ether, deployer);
-
 
         (uint128 reserve0, uint128 reserve1) = pair.totalAssets();
         assertEq(reserve0, 30 ether, "unexpected reserve0");
