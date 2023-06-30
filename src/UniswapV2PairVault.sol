@@ -65,24 +65,24 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
 
     }
 
-        // update reserves and, on the first call per block, price accumulators
-        function _update(uint balance0, uint balance1, uint128 _reserve0, uint128 _reserve1) private {
-            // require(balance0 <= uint112(-1) && balance1 <= uint112(-1), 'UniswapV2: OVERFLOW');
-            uint32 blockTimestamp = uint32(block.timestamp % 2**32);
-            uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
+    // update reserves and, on the first call per block, price accumulators
+    function _update(uint balance0, uint balance1, uint128 _reserve0, uint128 _reserve1) private {
+        // require(balance0 <= uint112(-1) && balance1 <= uint112(-1), 'UniswapV2: OVERFLOW');
+        uint32 blockTimestamp = uint32(block.timestamp % 2**32);
+        uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
 
 
-            if (timeElapsed > 0 && _reserve0 != 0 && _reserve1 != 0) {
-                price0CumulativeLast  += intoUint256(UD60x18.wrap(_reserve1).div(ud(_reserve0)).mul(ud(timeElapsed)));
-                price1CumulativeLast  += intoUint256(UD60x18.wrap(_reserve0).div(ud(_reserve1)).mul(ud(timeElapsed)));
+        if (timeElapsed > 0 && _reserve0 != 0 && _reserve1 != 0) {
+            price0CumulativeLast  += intoUint256(UD60x18.wrap(_reserve1).div(ud(_reserve0)).mul(ud(timeElapsed)));
+            price1CumulativeLast  += intoUint256(UD60x18.wrap(_reserve0).div(ud(_reserve1)).mul(ud(timeElapsed)));
 
-            }
-            reserve0 = uint128(balance0);
-            reserve1 = uint128(balance1);
-            blockTimestampLast = blockTimestamp;
-            emit Sync(reserve0, reserve1);
         }
-    
+        reserve0 = uint128(balance0);
+        reserve1 = uint128(balance1);
+        blockTimestampLast = blockTimestamp;
+        emit Sync(reserve0, reserve1);
+    }
+
 
     /**
      * @dev Attempts to fetch the asset decimals. A return value of false indicates that the attempt failed in some way.
@@ -114,7 +114,6 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable  {
     }
 
     function totalAssets() public view virtual returns (uint128 totalManagedAssets0, uint128 totalManagedAssets1 ) {
-        // if (totalSupply() == 0) return (0,0);
         return (reserve0, reserve1);
     }
     

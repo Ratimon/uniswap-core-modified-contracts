@@ -9,7 +9,6 @@ import {MockERC20} from "@solmate/test/utils/mocks/MockERC20.sol";
 import {UniswapV2PairVault} from "@main/UniswapV2PairVault.sol";
 
 
-
 contract UniswapV2PairVaultTest is Test {
 
     string mnemonic = "test test test test test test test test test test test junk";
@@ -31,18 +30,36 @@ contract UniswapV2PairVaultTest is Test {
         pair = new UniswapV2PairVault();
 
         token0 = IERC20(address(new MockERC20("Token0", "T0", 18)));
-        vm.label(address(token0), "Token0");
-
         token1 = IERC20(address(new MockERC20("Token1", "T1", 18)));
+
+        vm.label(address(token0), "Token0");
         vm.label(address(token1), "Token1");
+
+        deal({token: address(token0), to: deployer, give: 20 ether });
+        deal({token: address(token1), to: deployer, give: 30 ether});
 
         pair.initialize(token0, token1);
 
         vm.stopPrank();
     }
 
-    function test_1() external {
+    function test_deposit() external {
         vm.startPrank(deployer);
+
+        token0.approve(address(pair), type(uint256).max);
+        token1.approve(address(pair), type(uint256).max);
+
+        pair.deposit( 10 ether, 10 ether, deployer);
+
+        assertEq(pair.balanceOf(deployer), 10 ether, "initial share should be sqrt( token0 * token1 )");
+
+        (uint128 reserve0, uint128 reserve1) = pair.totalAssets();
+        assertEq(reserve0, 10 ether, "unexpected reserve0");
+        assertEq(reserve1, 10 ether, "unexpected reserve1");
+
+        assertEq(pair.totalSupply(), 10 ether);
+
+        vm.stopPrank();
 
     }
 
