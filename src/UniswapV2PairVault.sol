@@ -239,7 +239,6 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable {
 
         SafeERC20.safeTransferFrom(IERC20(address(this)), owner, address(this), shares);
         _burn(address(this), shares);
-
         // _burn(owner, shares);
 
         (uint128 _reserve0, uint128 _reserve1) = totalAssets();
