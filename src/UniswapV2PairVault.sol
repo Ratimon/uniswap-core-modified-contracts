@@ -252,6 +252,33 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable {
         emit Withdraw(msg.sender, receiver, owner, assets0, assets1, shares);
     }
 
+    function swap(uint amount0Out, uint amount1Out, address receiver) external {
+
+        require(amount0Out > 0 || amount1Out > 0, 'UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT');
+        (uint128 _reserve0, uint128 _reserve1) = totalAssets();
+        require(amount0Out < _reserve0 && amount1Out < _reserve1, 'UniswapV2: INSUFFICIENT_LIQUIDITY');
+
+        if (amount0Out > 0)  SafeERC20.safeTransfer(_token0, receiver, amount0Out);
+        if (amount1Out > 0)  SafeERC20.safeTransfer(_token1, receiver, amount1Out);
+        
+        uint256 balance0 = _token0.balanceOf(address(this));
+        uint256 balance1 = _token1.balanceOf(address(this));
+
+        uint amount0In = balance0 > _reserve0 - amount0Out ? balance0 - (_reserve0 - amount0Out) : 0;
+        uint amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
+
+        require(amount0In > 0 || amount1In > 0, 'UniswapV2: INSUFFICIENT_INPUT_AMOUNT');
+
+        uint balance0Adjusted = balance0.mul(1000).sub(amount0In.mul(3));
+        uint balance1Adjusted = balance1.mul(1000).sub(amount1In.mul(3));
+        require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'UniswapV2: K');
+
+        _update(balance0, balance1, _reserve0, _reserve1);
+
+        emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, receiver);
+
+    }
+
     function _convertToShares(uint256 assets0, uint256 assets1, Math.Rounding rounding)
         internal
         view
