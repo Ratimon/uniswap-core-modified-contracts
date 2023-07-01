@@ -237,9 +237,7 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable {
         (assets0, assets1) = previewRedeem(shares);
         require(assets0 > 0 && assets1 > 0, "UniswapV2: INSUFFICIENT_LIQUIDITY_BURNED");
 
-        SafeERC20.safeTransferFrom(IERC20(address(this)), owner, address(this), shares);
-        _burn(address(this), shares);
-        // _burn(owner, shares);
+        _burn(owner, shares);
 
         (uint128 _reserve0, uint128 _reserve1) = totalAssets();
 
