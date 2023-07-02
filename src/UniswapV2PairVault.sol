@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.19;
 
-import {console2} from "@forge-std/console2.sol";
-
-
 import {IUniswapVaultToken} from "./interfaces/IUniswapVaultToken.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -270,25 +267,16 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable {
         uint amount0In = balance0 > _reserve0 - amount0Out ? balance0 - (_reserve0 - amount0Out) : 0;
         uint amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
 
-        console2.log('amount0In', amount0In);
-        console2.log('amount1In', amount1In);
-
         require(amount0In > 0 || amount1In > 0, 'UniswapV2: INSUFFICIENT_INPUT_AMOUNT');
 
         uint balance0Adjusted = balance0.mul(1000).sub(amount0In.mul(3));
         uint balance1Adjusted = balance1.mul(1000).sub(amount1In.mul(3));
 
-        console2.log('balance0Adjusted', balance0Adjusted);
-        console2.log('balance1Adjusted', balance1Adjusted);
-
-        console2.log('balance0Adjusted.mul(balance1Adjusted)', balance0Adjusted.mul(balance1Adjusted));
-        console2.log('k', uint(_reserve0).mul(_reserve1).mul(1000**2));
         require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'UniswapV2: K');
 
         _update(balance0, balance1, _reserve0, _reserve1);
 
         emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, receiver);
-
     }
 
     function _convertToShares(uint256 assets0, uint256 assets1, Math.Rounding rounding)
