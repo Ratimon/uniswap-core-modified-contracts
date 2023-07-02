@@ -199,4 +199,26 @@ contract UniswapV2PairVaultTest is Test {
 
         vm.stopPrank();
     }
+
+    function test_swap() external deployerInit deployerAddsFirstLiquiditySuccess {
+
+        vm.startPrank(alice);
+
+        deal({token: address(token0), to: alice, give: 1 ether});
+
+        uint256 amountOut = 0.90 ether;
+        token0.transfer(address(pair), 1 ether);
+        pair.swap(0, amountOut, alice);
+
+        assertEq(token0.balanceOf(alice), 0 ether, "unexpected token0 balance" );
+        assertEq(token1.balanceOf(alice), 0.90 ether, "unexpected token1 balance" );
+
+        (uint128 reserve0, uint128 reserve1) = pair.totalAssets();
+        assertEq(reserve0, 10 ether + 1 ether, "unexpected reserve0");
+        assertEq(reserve1, 10 ether - 0.90 ether, "unexpected reserve1");
+
+
+        vm.stopPrank();
+
+    }
 }
