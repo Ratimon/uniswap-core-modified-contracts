@@ -46,7 +46,7 @@ contract UniswapV2PairVaultTest is Test {
         assertEq(token0.balanceOf(deployer), 200 ether, "Unexpected Faucet for token0");
         assertEq(token1.balanceOf(deployer), 300 ether, "Unexpected Faucet for token0");
 
-        pair.initialize(token0, token1);
+        pair.initialize(token0, token1, 1);
 
         vm.stopPrank();
         _;

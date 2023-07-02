@@ -5,6 +5,8 @@ import {IUniswapVaultToken} from "./interfaces/IUniswapVaultToken.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC3156FlashLender} from "@openzeppelin/contracts/interfaces/IERC3156FlashLender.sol";
+import {IERC3156FlashBorrower} from "@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol";
 
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeMath} from "@openzeppelin/contracts/utils/math/SafeMath.sol";
@@ -15,9 +17,15 @@ import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.s
 
 import {UD60x18, intoUint128, intoUint256, ud, unwrap} from "@prb-math/UD60x18.sol";
 
-contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable {
+contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, Initializable {
     using Math for uint256;
     using SafeMath for uint256;
+
+    bytes32 private constant CALLBACK_SUCCESS = keccak256("ERC3156FlashBorrower.onFlashLoan");
+
+    error RepayFailed();
+    error UnsupportedCurrency();
+    error CallbackFailed();
 
     event Swap(
         address indexed sender,
@@ -45,11 +53,13 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable {
     uint256 public price1CumulativeLast;
     uint256 public kLast; // reserve0 * reserve1, as of immediately after the most recent liquidity event
 
+    uint8 private flashLoanFee;
+
     constructor() ERC20("Uniswap V2", "UNI-V2") {
         factory = msg.sender;
     }
 
-    function initialize(IERC20 token0_, IERC20 token1_) external initializer {
+    function initialize(IERC20 token0_, IERC20 token1_, uint8 flashLoanFee_) external initializer {
         (bool success0, uint8 asset0Decimals) = _tryGetAssetDecimals(token0_);
         uint8 underlyingDecimals0 = success0 ? asset0Decimals : 18;
         _token0 = token0_;
@@ -60,6 +70,8 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable {
 
         require(underlyingDecimals0 == underlyingDecimals1, "decimals must equal");
         _underlyingDecimals = underlyingDecimals0;
+
+        flashLoanFee = flashLoanFee_;
     }
 
     // update reserves and, on the first call per block, price accumulators
@@ -191,6 +203,59 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable {
         emit Deposit(msg.sender, receiver, assets0, assets1, shares);
     }
 
+    function maxFlashLoan(address token) external view returns (uint256) {
+        if (token == address(_token0)) {
+            return _token0.balanceOf(address(this));
+        }
+        if (token == address(_token1)) {
+            return _token1.balanceOf(address(this));
+        }
+        return 0;
+    }
+
+    function flashFee(address token, uint256 amount) public view returns (uint256) {
+
+        // if ( token == address(_token0)) {
+        //     return _token0.balanceOf(address(this)).mul( uint256(flashLoanFee)).div(100);
+        // } else if  (token == address(_token1)) {
+        //     return _token1.balanceOf(address(this)).mul( uint256(flashLoanFee)).div(100);
+        // } else {
+        //     revert UnsupportedCurrency();
+        // }
+
+        if ( token != address(_token0) &&  token != address(_token1) ) {
+            revert UnsupportedCurrency();
+        }
+
+        return amount.mul( uint256(flashLoanFee)).div(100);
+    }
+
+    function flashLoan(IERC3156FlashBorrower receiver, address token, uint256 amount, bytes calldata data)
+        external
+        returns (bool)
+    {
+        if ( token != address(_token0) &&  token != address(_token1) ) {
+            revert UnsupportedCurrency();
+        }
+
+        IERC20 _token = IERC20(token);
+        uint256 balanceBefore = _token.balanceOf(address(this));
+
+        SafeERC20.safeTransfer(_token, address(receiver), amount);
+
+        uint256 fee = flashFee(token, amount);
+
+        if (receiver.onFlashLoan(msg.sender, address(_token), amount, fee, data) != CALLBACK_SUCCESS) {
+            revert CallbackFailed();
+        }
+
+        if (_token.balanceOf(address(this)) < balanceBefore + fee) {
+            revert RepayFailed();
+        }
+
+        return true;
+    }
+
     // function mint(uint256 shares, address receiver) public virtual override returns (uint256) {
     //     require(shares <= maxMint(receiver), "ERC4626: mint more than max");
 
@@ -278,6 +343,8 @@ contract UniswapV2PairVault is IUniswapVaultToken, ERC20, Initializable {
 
         emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, receiver);
     }
+
+
 
     function _convertToShares(uint256 assets0, uint256 assets1, Math.Rounding rounding)
         internal
