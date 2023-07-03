@@ -14,10 +14,11 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import {UD60x18, intoUint128, intoUint256, ud, unwrap} from "@prb-math/UD60x18.sol";
 
-contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, Initializable {
+contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, Initializable, ReentrancyGuard {
     using Math for uint256;
     using SafeMath for uint256;
 
@@ -175,9 +176,9 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
     // }
 
     function deposit(uint256 assets0, uint256 assets1, address receiver)
-        public
-        virtual
+        external
         override
+        nonReentrant
         returns (uint256 shares)
     {
         (uint256 maxAssets0, uint256 maxAssets1) = maxDeposit(receiver);
@@ -232,6 +233,7 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
 
     function flashLoan(IERC3156FlashBorrower receiver, address token, uint256 amount, bytes calldata data)
         external
+        nonReentrant
         returns (bool)
     {
         if ( token != address(_token0) &&  token != address(_token1) ) {
@@ -301,9 +303,9 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
     // }
 
     function redeem(uint256 shares, address receiver, address owner)
-        public
-        virtual
+        external
         override
+        nonReentrant
         returns (uint256 assets0, uint256 assets1)
     {
         require(shares <= maxRedeem(owner), "ERC4626: redeem more than max");
@@ -330,7 +332,7 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
         emit Withdraw(msg.sender, receiver, owner, assets0, assets1, shares);
     }
 
-    function swap(uint amount0Out, uint amount1Out, address receiver) external {
+    function swap(uint amount0Out, uint amount1Out, address receiver) external nonReentrant {
 
         require(amount0Out > 0 || amount1Out > 0, 'UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT');
         (uint128 _reserve0, uint128 _reserve1) = totalAssets();
