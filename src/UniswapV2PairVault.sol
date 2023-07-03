@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.8.19;
 
-import {console2} from "@forge-std/console2.sol";
-
 import {IUniswapVaultToken} from "@main/interfaces/IUniswapVaultToken.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -247,14 +245,9 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
 
         uint256 fee = flashFee(token, amount);
 
-        console2.log('fee',fee);
-
         if (receiver.onFlashLoan(msg.sender, address(_token), amount, fee, data) != CALLBACK_SUCCESS) {
             revert CallbackFailed();
         }
-
-        console2.log('_token.balanceOf(address(this))',_token.balanceOf(address(this)));
-        console2.log('balanceBefore + fee',balanceBefore + fee);
 
         if (_token.balanceOf(address(this)) < balanceBefore + fee) {
             revert RepayFailed();
@@ -271,7 +264,6 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
         // } else {
         //     _update(balance0 , balanceBefore + fee, _reserve0, _reserve1);
         // }
-
         
 
         return true;

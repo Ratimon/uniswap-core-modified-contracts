@@ -3,11 +3,9 @@ pragma solidity =0.8.19;
 
 // import {console2} from "@forge-std/console2.sol";
 
-
 import {Test} from "@forge-std/Test.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 import {MockERC20} from "@solmate/test/utils/mocks/MockERC20.sol";
 
 import {FlashLoanReceiver} from "@main/FlashLoanReceiver.sol";
@@ -229,17 +227,13 @@ contract UniswapV2PairVaultTest is Test {
 
     function test_flashLoan() external deployerInit deployerAddsFirstLiquiditySuccess {
         vm.startPrank(alice);
-
         deal({token: address(token0), to: alice, give: 1 ether});
 
         FlashLoanReceiver receiver = new FlashLoanReceiver( address(pair), address(token0), alice );
 
         token0.transfer(address(receiver), 1 ether);
         uint256 fee = pair.flashFee(address(token0), pair.maxFlashLoan(address(token0)) );
-
         receiver.borrow();
-
-        // console2.log('fee test', fee);
 
         (uint128 reserve0, ) = pair.totalAssets();
         assertEq(reserve0, 10 ether + fee, "unexpected reserve0");
@@ -247,7 +241,5 @@ contract UniswapV2PairVaultTest is Test {
         vm.stopPrank();
 
     }
-
-
     
 }
