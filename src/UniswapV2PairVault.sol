@@ -60,14 +60,14 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
         factory = msg.sender;
     }
 
-    function initialize(IERC20 token0_, IERC20 token1_, uint8 flashLoanFee_) external initializer {
-        (bool success0, uint8 asset0Decimals) = _tryGetAssetDecimals(token0_);
+    function initialize(address token0_, address token1_, uint8 flashLoanFee_) external initializer {
+        _token0 = IERC20(token0_);
+        (bool success0, uint8 asset0Decimals) = _tryGetAssetDecimals(_token0);
         uint8 underlyingDecimals0 = success0 ? asset0Decimals : 18;
-        _token0 = token0_;
-
-        (bool success1, uint8 asset1Decimals) = _tryGetAssetDecimals(token1_);
+        
+        _token1 = IERC20(token1_);
+        (bool success1, uint8 asset1Decimals) = _tryGetAssetDecimals(_token1);
         uint8 underlyingDecimals1 = success1 ? asset1Decimals : 18;
-        _token1 = token1_;
 
         require(underlyingDecimals0 == underlyingDecimals1, "decimals must equal");
         _underlyingDecimals = underlyingDecimals0;
