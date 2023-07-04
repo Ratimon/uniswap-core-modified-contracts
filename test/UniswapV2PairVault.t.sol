@@ -26,7 +26,6 @@ contract UniswapV2PairVaultTest is Test {
     function setUp() public {
         vm.startPrank(deployer);
         vm.deal(deployer, 1 ether);
-
         vm.label(deployer, "Deployer");
 
         pair = new UniswapV2PairVault();
