@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts (last updated v4.9.0) (interfaces/IERC4626.sol)
-
 pragma solidity ^0.8.0;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -35,18 +33,6 @@ interface IUniswapVaultToken is IERC20, IERC20Metadata {
     function previewDeposit(uint256 assets0, uint256 assets1) external view returns (uint256 shares);
 
     function deposit(uint256 assets0, uint256 assets1, address receiver) external returns (uint256 shares);
-
-    // function maxMint(address receiver) external view returns (uint256 maxShares);
-
-    // function previewMint(uint256 shares) external view returns (uint256 assets0, uint256 assets1);
-
-    // function mint(uint256 shares, address receiver) external returns (uint256 assets0, uint256 assets1);
-
-    // function maxWithdraw(address owner) external view returns (uint256 maxAssets0, uint256 maxAssets1 );
-
-    // function previewWithdraw(uint256 assets0, uint256 assets1) external view returns (uint256 shares);
-
-    // function withdraw(uint256 assets0, uint256 assets1, address receiver, address owner) external returns (uint256 shares);
 
     function maxRedeem(address owner) external view returns (uint256 maxShares);
 

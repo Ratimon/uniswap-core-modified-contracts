@@ -138,13 +138,6 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
         return (type(uint256).max, type(uint256).max);
     }
 
-    // function maxMint(address) public view virtual override returns (uint256) {
-    //     return type(uint256).max;
-    // }
-
-    // function maxWithdraw(address owner) public view virtual override returns (uint256, uint256) {
-    //     return _convertToAssets(balanceOf(owner), Math.Rounding.Down);
-    // }
 
     function maxRedeem(address owner) public view virtual override returns (uint256) {
         return balanceOf(owner);
@@ -154,26 +147,11 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
         return _convertToShares(assets0, assets1, Math.Rounding.Down);
     }
 
-    // function previewMint(uint256 shares) public view virtual override returns (uint256, uint256) {
-    //     return _convertToAssets(shares, Math.Rounding.Up);
-    // }
-
-    // function previewWithdraw(uint256 assets0, uint256 assets1) public view virtual override returns (uint256) {
-    //     return _convertToShares(assets0, assets1, Math.Rounding.Up);
-    // }
 
     function previewRedeem(uint256 shares) public view virtual override returns (uint256, uint256) {
         return _convertToAssets(shares, Math.Rounding.Down);
     }
 
-    // function deposit(uint256 assets, address receiver) public virtual override returns (uint256) {
-    //     require(assets <= maxDeposit(receiver), "ERC4626: deposit more than max");
-
-    //     uint256 shares = previewDeposit(assets);
-    //     _deposit(_msgSender(), receiver, assets, shares);
-
-    //     return shares;
-    // }
 
     function deposit(uint256 assets0, uint256 assets1, address receiver)
         external
@@ -204,103 +182,6 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
         emit Deposit(msg.sender, receiver, assets0, assets1, shares);
     }
 
-    function maxFlashLoan(address token) external view returns (uint256) {
-        if (token == address(_token0)) {
-            return _token0.balanceOf(address(this));
-        }
-        if (token == address(_token1)) {
-            return _token1.balanceOf(address(this));
-        }
-        return 0;
-    }
-
-    function flashFee(address token, uint256 amount) public view returns (uint256) {
-
-        // if ( token == address(_token0)) {
-        //     return _token0.balanceOf(address(this)).mul( uint256(flashLoanFee)).div(100);
-        // } else if  (token == address(_token1)) {
-        //     return _token1.balanceOf(address(this)).mul( uint256(flashLoanFee)).div(100);
-        // } else {
-        //     revert UnsupportedCurrency();
-        // }
-
-        if ( token != address(_token0) &&  token != address(_token1) ) {
-            revert UnsupportedCurrency();
-        }
-
-        return amount.mul( uint256(flashLoanFee)).div(100);
-    }
-
-    function flashLoan(IERC3156FlashBorrower receiver, address token, uint256 amount, bytes calldata data)
-        external
-        nonReentrant
-        returns (bool)
-    {
-        if ( token != address(_token0) &&  token != address(_token1) ) {
-            revert UnsupportedCurrency();
-        }
-
-        IERC20 _token = IERC20(token);
-        uint256 balanceBefore = _token.balanceOf(address(this));
-
-        SafeERC20.safeTransfer(_token, address(receiver), amount);
-
-        uint256 fee = flashFee(token, amount);
-
-        if (receiver.onFlashLoan(msg.sender, address(_token), amount, fee, data) != CALLBACK_SUCCESS) {
-            revert CallbackFailed();
-        }
-
-        if (_token.balanceOf(address(this)) < balanceBefore + fee) {
-            revert RepayFailed();
-        }
-
-        (uint128 _reserve0, uint128 _reserve1) = totalAssets();
-
-        uint256 balance0 = _token0.balanceOf(address(this));
-        uint256 balance1 = _token1.balanceOf(address(this));
-        _update(balance0, balance1, _reserve0, _reserve1);
-
-        // if ( token == address(_token0) ) {
-        //     _update(balanceBefore + fee, balance1, _reserve0, _reserve1);
-        // } else {
-        //     _update(balance0 , balanceBefore + fee, _reserve0, _reserve1);
-        // }
-        
-
-        return true;
-    }
-
-    // function mint(uint256 shares, address receiver) public virtual override returns (uint256) {
-    //     require(shares <= maxMint(receiver), "ERC4626: mint more than max");
-
-    //     uint256 assets = previewMint(shares);
-    //     _deposit(_msgSender(), receiver, assets, shares);
-
-    //     return assets;
-    // }
-
-    // function mint(uint256 shares, address receiver) public virtual override returns (uint256, uint256);
-
-    // function withdraw(uint256 assets, address receiver, address owner) public virtual override returns (uint256) {
-    //     require(assets <= maxWithdraw(owner), "ERC4626: withdraw more than max");
-
-    //     uint256 shares = previewWithdraw(assets);
-    //     _withdraw(_msgSender(), receiver, owner, assets, shares);
-
-    //     return shares;
-    // }
-
-    // function withdraw(uint256 assets0, uint256 assets1, address receiver, address owner) public virtual override returns (uint256);
-
-    // function redeem(uint256 shares, address receiver, address owner) public virtual override returns (uint256) {
-    //     require(shares <= maxRedeem(owner), "ERC4626: redeem more than max");
-
-    //     uint256 assets = previewRedeem(shares);
-    //     _withdraw(_msgSender(), receiver, owner, assets, shares);
-
-    //     return assets;
-    // }
 
     function redeem(uint256 shares, address receiver, address owner)
         external
@@ -394,43 +275,51 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
         );
     }
 
-    // function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal virtual {
-    //     SafeERC20.safeTransferFrom(_asset, caller, address(this), assets);
-    //     _mint(receiver, shares);
+    function maxFlashLoan(address token) external view returns (uint256) {
+        if (token == address(_token0)) {
+            return _token0.balanceOf(address(this));
+        }
+        if (token == address(_token1)) {
+            return _token1.balanceOf(address(this));
+        }
+        return 0;
+    }
 
-    //     emit Deposit(caller, receiver, assets, shares);
-    // }
+    function flashFee(address token, uint256 amount) public view returns (uint256) {
 
-    // function _deposist(address caller, address receiver, uint256 assets, uint256 shares) internal virtual;
+        if ( token != address(_token0) &&  token != address(_token1) ) {
+            revert UnsupportedCurrency();
+        }
 
-    // function _withdraw(
-    //     address caller,
-    //     address receiver,
-    //     address owner,
-    //     uint256 assets,
-    //     uint256 shares
-    // ) internal virtual {
-    //     if (caller != owner) {
-    //         _spendAllowance(owner, caller, shares);
-    //     }
+        return amount.mul( uint256(flashLoanFee)).div(100);
+    }
 
-    //     // If _asset is ERC777, `transfer` can trigger a reentrancy AFTER the transfer happens through the
-    //     // `tokensReceived` hook. On the other hand, the `tokensToSend` hook, that is triggered before the transfer,
-    //     // calls the vault, which is assumed not malicious.
-    //     //
-    //     // Conclusion: we need to do the transfer after the burn so that any reentrancy would happen after the
-    //     // shares are burned and after the assets are transferred, which is a valid state.
-    //     _burn(owner, shares);
-    //     SafeERC20.safeTransfer(_asset, receiver, assets);
+    function flashLoan(IERC3156FlashBorrower receiver, address token, uint256 amount, bytes calldata data)
+        external
+        nonReentrant
+        returns (bool)
+    {
+        if ( token != address(_token0) &&  token != address(_token1) ) {
+            revert UnsupportedCurrency();
+        }
 
-    //     emit Withdraw(caller, receiver, owner, assets, shares);
-    // }
+        IERC20 _token = IERC20(token);
+        uint256 balanceBefore = _token.balanceOf(address(this));
+        SafeERC20.safeTransfer(_token, address(receiver), amount);
+        uint256 fee = flashFee(token, amount);
 
-    // function _withdraw(
-    //     address caller,
-    //     address receiver,
-    //     address owner,
-    //     uint256 assets,
-    //     uint256 shares
-    // ) internal virtual;
+        if (receiver.onFlashLoan(msg.sender, address(_token), amount, fee, data) != CALLBACK_SUCCESS) {
+            revert CallbackFailed();
+        }
+        if (_token.balanceOf(address(this)) < balanceBefore + fee) {
+            revert RepayFailed();
+        }
+
+        (uint128 _reserve0, uint128 _reserve1) = totalAssets();
+        uint256 balance0 = _token0.balanceOf(address(this));
+        uint256 balance1 = _token1.balanceOf(address(this));
+        _update(balance0, balance1, _reserve0, _reserve1);
+
+        return true;
+    }
 }
