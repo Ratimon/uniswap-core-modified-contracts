@@ -64,7 +64,7 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
         _token0 = IERC20(token0_);
         (bool success0, uint8 asset0Decimals) = _tryGetAssetDecimals(_token0);
         uint8 underlyingDecimals0 = success0 ? asset0Decimals : 18;
-        
+
         _token1 = IERC20(token1_);
         (bool success1, uint8 asset1Decimals) = _tryGetAssetDecimals(_token1);
         uint8 underlyingDecimals1 = success1 ? asset1Decimals : 18;
@@ -138,7 +138,6 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
         return (type(uint256).max, type(uint256).max);
     }
 
-
     function maxRedeem(address owner) public view virtual override returns (uint256) {
         return balanceOf(owner);
     }
@@ -147,11 +146,9 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
         return _convertToShares(assets0, assets1, Math.Rounding.Down);
     }
 
-
     function previewRedeem(uint256 shares) public view virtual override returns (uint256, uint256) {
         return _convertToAssets(shares, Math.Rounding.Down);
     }
-
 
     function deposit(uint256 assets0, uint256 assets1, address receiver)
         external
@@ -181,7 +178,6 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
 
         emit Deposit(msg.sender, receiver, assets0, assets1, shares);
     }
-
 
     function redeem(uint256 shares, address receiver, address owner)
         external
@@ -213,34 +209,33 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
         emit Withdraw(msg.sender, receiver, owner, assets0, assets1, shares);
     }
 
-    function swap(uint amount0Out, uint amount1Out, address receiver) external nonReentrant {
-
-        require(amount0Out > 0 || amount1Out > 0, 'UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT');
+    function swap(uint256 amount0Out, uint256 amount1Out, address receiver) external nonReentrant {
+        require(amount0Out > 0 || amount1Out > 0, "UniswapV2: INSUFFICIENT_OUTPUT_AMOUNT");
         (uint128 _reserve0, uint128 _reserve1) = totalAssets();
-        require(amount0Out < _reserve0 && amount1Out < _reserve1, 'UniswapV2: INSUFFICIENT_LIQUIDITY');
+        require(amount0Out < _reserve0 && amount1Out < _reserve1, "UniswapV2: INSUFFICIENT_LIQUIDITY");
 
-        if (amount0Out > 0)  SafeERC20.safeTransfer(_token0, receiver, amount0Out);
-        if (amount1Out > 0)  SafeERC20.safeTransfer(_token1, receiver, amount1Out);
-        
+        if (amount0Out > 0) SafeERC20.safeTransfer(_token0, receiver, amount0Out);
+        if (amount1Out > 0) SafeERC20.safeTransfer(_token1, receiver, amount1Out);
+
         uint256 balance0 = _token0.balanceOf(address(this));
         uint256 balance1 = _token1.balanceOf(address(this));
 
-        uint amount0In = balance0 > _reserve0 - amount0Out ? balance0 - (_reserve0 - amount0Out) : 0;
-        uint amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
+        uint256 amount0In = balance0 > _reserve0 - amount0Out ? balance0 - (_reserve0 - amount0Out) : 0;
+        uint256 amount1In = balance1 > _reserve1 - amount1Out ? balance1 - (_reserve1 - amount1Out) : 0;
 
-        require(amount0In > 0 || amount1In > 0, 'UniswapV2: INSUFFICIENT_INPUT_AMOUNT');
+        require(amount0In > 0 || amount1In > 0, "UniswapV2: INSUFFICIENT_INPUT_AMOUNT");
 
-        uint balance0Adjusted = balance0.mul(1000).sub(amount0In.mul(3));
-        uint balance1Adjusted = balance1.mul(1000).sub(amount1In.mul(3));
+        uint256 balance0Adjusted = balance0.mul(1000).sub(amount0In.mul(3));
+        uint256 balance1Adjusted = balance1.mul(1000).sub(amount1In.mul(3));
 
-        require(balance0Adjusted.mul(balance1Adjusted) >= uint(_reserve0).mul(_reserve1).mul(1000**2), 'UniswapV2: K');
+        require(
+            balance0Adjusted.mul(balance1Adjusted) >= uint256(_reserve0).mul(_reserve1).mul(1000 ** 2), "UniswapV2: K"
+        );
 
         _update(balance0, balance1, _reserve0, _reserve1);
 
         emit Swap(msg.sender, amount0In, amount1In, amount0Out, amount1Out, receiver);
     }
-
-
 
     function _convertToShares(uint256 assets0, uint256 assets1, Math.Rounding rounding)
         internal
@@ -286,12 +281,11 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
     }
 
     function flashFee(address token, uint256 amount) public view returns (uint256) {
-
-        if ( token != address(_token0) &&  token != address(_token1) ) {
+        if (token != address(_token0) && token != address(_token1)) {
             revert UnsupportedCurrency();
         }
 
-        return amount.mul( uint256(flashLoanFee)).div(100);
+        return amount.mul(uint256(flashLoanFee)).div(100);
     }
 
     function flashLoan(IERC3156FlashBorrower receiver, address token, uint256 amount, bytes calldata data)
@@ -299,7 +293,7 @@ contract UniswapV2PairVault is IUniswapVaultToken, IERC3156FlashLender, ERC20, I
         nonReentrant
         returns (bool)
     {
-        if ( token != address(_token0) &&  token != address(_token1) ) {
+        if (token != address(_token0) && token != address(_token1)) {
             revert UnsupportedCurrency();
         }
 

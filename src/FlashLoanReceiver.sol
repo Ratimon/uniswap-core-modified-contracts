@@ -8,9 +8,8 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 import {UniswapV2PairVault} from "@main/UniswapV2PairVault.sol";
 
-
 contract FlashLoanReceiver is IERC3156FlashBorrower {
-    UniswapV2PairVault  pool;
+    UniswapV2PairVault pool;
     IERC20 token;
     address receiver;
 
@@ -28,12 +27,13 @@ contract FlashLoanReceiver is IERC3156FlashBorrower {
         );
     }
 
-    function onFlashLoan(address, address _token, uint256 amount, uint256 fee, bytes calldata) external returns (bytes32) {
-
+    function onFlashLoan(address, address _token, uint256 amount, uint256 fee, bytes calldata)
+        external
+        returns (bytes32)
+    {
         uint256 amountToBeRepaid = amount + fee;
         SafeERC20.safeTransfer(IERC20(_token), address(pool), amountToBeRepaid);
 
         return keccak256("ERC3156FlashBorrower.onFlashLoan");
     }
-
 }

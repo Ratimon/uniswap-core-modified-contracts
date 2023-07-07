@@ -5,8 +5,11 @@ anvil-node:
 anvil-node-auto:
 	anvil --chain-id 1337 --block-time 15
 
-unit-test:
+unit-pair:
 	forge test --match-path test/UniswapV2PairVault.t.sol -vvv
+
+unit-factory:
+	forge test --match-path test/UniswapV2Factory.t.sol -vvv
 
 unit-test2:
 	forge test --match-test test_swap -vvv

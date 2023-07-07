@@ -27,7 +27,6 @@ contract UniswapV2FactoryTest is Test {
         vm.deal(deployer, 1 ether);
         vm.label(deployer, "Deployer");
 
-
         factory = new UniswapV2Factory(1); // fee 1%
 
         token0 = IERC20(address(new MockERC20("Token0", "T0", 18)));
@@ -43,17 +42,16 @@ contract UniswapV2FactoryTest is Test {
         vm.startPrank(deployer);
 
         vm.expectRevert(bytes("UniswapV2: IDENTICAL_ADDRESSES"));
-        factory.createPair( address(token0), address(token0));
+        factory.createPair(address(token0), address(token0));
 
         vm.stopPrank();
     }
-
 
     function test_RevertWhen_ZERO_ADDRESS_createPair() external {
         vm.startPrank(deployer);
 
         vm.expectRevert(bytes("UniswapV2: ZERO_ADDRESS"));
-        factory.createPair( address(token0), address(0));
+        factory.createPair(address(token0), address(0));
 
         vm.expectRevert(bytes("UniswapV2: ZERO_ADDRESS"));
         factory.createPair(address(0), address(token1));
@@ -64,7 +62,7 @@ contract UniswapV2FactoryTest is Test {
     function test_RevertWhen_PAIR_EXISTS_createPair() external {
         vm.startPrank(deployer);
 
-        factory.createPair(address(token0),address(token1));
+        factory.createPair(address(token0), address(token1));
 
         vm.expectRevert(bytes("UniswapV2: PAIR_EXISTS"));
         factory.createPair(address(token1), address(token0));
@@ -75,10 +73,7 @@ contract UniswapV2FactoryTest is Test {
     function test_createPair() external {
         vm.startPrank(deployer);
 
-        address pairAddress = factory.createPair(
-            address(token1),
-            address(token0)
-        );
+        address pairAddress = factory.createPair(address(token1), address(token0));
 
         UniswapV2PairVault pair = UniswapV2PairVault(pairAddress);
 

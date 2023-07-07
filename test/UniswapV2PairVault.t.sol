@@ -177,7 +177,7 @@ contract UniswapV2PairVaultTest is Test {
         vm.startPrank(alice);
 
         vm.warp(37);
-        
+
         uint256 token0BalanceBeforeRedeem = token0.balanceOf(alice);
         uint256 token1BalanceBeforeRedeem = token1.balanceOf(alice);
 
@@ -187,41 +187,53 @@ contract UniswapV2PairVaultTest is Test {
         uint256 token0BalanceAfterRedeem = token0.balanceOf(alice);
         uint256 token1BalanceAfterRedeem = token1.balanceOf(alice);
 
-        uint decimalsOffset = 5;
+        uint256 decimalsOffset = 5;
 
         (uint128 reserve0, uint128 reserve1) = pair.totalAssets();
-        assertApproxEqAbs(reserve0, 0 ether, 10*(10**decimalsOffset) , "unexpected reserve0");
-        assertApproxEqAbs(reserve1, 0 ether, 10*(10**decimalsOffset), "unexpected reserve1");
+        assertApproxEqAbs(reserve0, 0 ether, 10 * (10 ** decimalsOffset), "unexpected reserve0");
+        assertApproxEqAbs(reserve1, 0 ether, 10 * (10 ** decimalsOffset), "unexpected reserve1");
 
-        assertApproxEqAbs(pair.balanceOf(deployer), 0 ether, 10*(10**decimalsOffset), "initial share should be sqrt( token0 * token1 )");
-        assertApproxEqAbs(pair.totalSupply(), 0 ether, 10*(10**decimalsOffset), "unexpected total supply");
+        assertApproxEqAbs(
+            pair.balanceOf(deployer),
+            0 ether,
+            10 * (10 ** decimalsOffset),
+            "initial share should be sqrt( token0 * token1 )"
+        );
+        assertApproxEqAbs(pair.totalSupply(), 0 ether, 10 * (10 ** decimalsOffset), "unexpected total supply");
 
-        assertApproxEqAbs(token0BalanceAfterRedeem, token0BalanceBeforeRedeem + 10 ether, 10*(10**decimalsOffset), "unexpected token0 balance of deployer" );
-        assertApproxEqAbs(token1BalanceAfterRedeem, token1BalanceBeforeRedeem + 10 ether, 10*(10**decimalsOffset), "unexpected token1 balance of deployer" );
+        assertApproxEqAbs(
+            token0BalanceAfterRedeem,
+            token0BalanceBeforeRedeem + 10 ether,
+            10 * (10 ** decimalsOffset),
+            "unexpected token0 balance of deployer"
+        );
+        assertApproxEqAbs(
+            token1BalanceAfterRedeem,
+            token1BalanceBeforeRedeem + 10 ether,
+            10 * (10 ** decimalsOffset),
+            "unexpected token1 balance of deployer"
+        );
 
         vm.stopPrank();
     }
 
     function test_swap() external deployerInit deployerAddsFirstLiquiditySuccess {
-
         vm.startPrank(alice);
 
         deal({token: address(token0), to: alice, give: 1 ether});
 
-        uint256 amountOut = 0.90 ether;
+        uint256 amountOut = 0.9 ether;
         token0.transfer(address(pair), 1 ether);
         pair.swap(0, amountOut, alice);
 
-        assertEq(token0.balanceOf(alice), 0 ether, "unexpected token0 balance" );
-        assertEq(token1.balanceOf(alice), 0.90 ether, "unexpected token1 balance" );
+        assertEq(token0.balanceOf(alice), 0 ether, "unexpected token0 balance");
+        assertEq(token1.balanceOf(alice), 0.9 ether, "unexpected token1 balance");
 
         (uint128 reserve0, uint128 reserve1) = pair.totalAssets();
         assertEq(reserve0, 10 ether + 1 ether, "unexpected reserve0");
-        assertEq(reserve1, 10 ether - 0.90 ether, "unexpected reserve1");
-
+        assertEq(reserve1, 10 ether - 0.9 ether, "unexpected reserve1");
 
         vm.stopPrank();
-
     }
 
     function test_flashLoan() external deployerInit deployerAddsFirstLiquiditySuccess {
@@ -231,14 +243,12 @@ contract UniswapV2PairVaultTest is Test {
         FlashLoanReceiver receiver = new FlashLoanReceiver( address(pair), address(token0), alice );
 
         token0.transfer(address(receiver), 1 ether);
-        uint256 fee = pair.flashFee(address(token0), pair.maxFlashLoan(address(token0)) );
+        uint256 fee = pair.flashFee(address(token0), pair.maxFlashLoan(address(token0)));
         receiver.borrow();
 
-        (uint128 reserve0, ) = pair.totalAssets();
+        (uint128 reserve0,) = pair.totalAssets();
         assertEq(reserve0, 10 ether + fee, "unexpected reserve0");
 
         vm.stopPrank();
-
     }
-    
 }

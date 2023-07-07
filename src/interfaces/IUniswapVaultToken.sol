@@ -42,5 +42,5 @@ interface IUniswapVaultToken is IERC20, IERC20Metadata {
         external
         returns (uint256 assets0, uint256 assets1);
 
-    function swap(uint amount0Out, uint amount1Out, address receiver) external;
+    function swap(uint256 amount0Out, uint256 amount1Out, address receiver) external;
 }
